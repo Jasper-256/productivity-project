@@ -2,50 +2,58 @@
 To run the code:
 swiftc -o StatusMenuApp AppDelegate.swift -framework AppKit
 ./StatusMenuApp
-
 */
 
 import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
+    var runningProcess: Process?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Set up the status bar item with a system symbol icon
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Status Menu")
+            button.image = NSImage(systemSymbolName: "square.fill", accessibilityDescription: "Status Menu")
             button.image?.isTemplate = true // Adapts to light/dark mode
         }
 
         // Create the menu
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Run Program", action: #selector(runProductivityScript), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Stop Program", action: #selector(stopProductivityScript), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApplication), keyEquivalent: "q"))
         statusItem?.menu = menu
     }
 
     @objc func runProductivityScript() {
-        // Run productivity.py script located in the same repository folder
-        let fileManager = FileManager.default
-        let appPath = fileManager.currentDirectoryPath
-        let scriptPath = "\(appPath)/productivity.py" // Assuming productivity.py is in the same repo folder
-
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/Users/dowrion/Desktop/CSE/CSE108/Project/.venv/bin/python3") // Path to python3
-        process.arguments = [scriptPath]
-
-        do {
-            try process.run()
-            process.waitUntilExit() // Waits until the script completes
-        } catch {
-            print("Failed to run script: \(error)")
+        self.runningProcess = process
+        process.executableURL = URL(fileURLWithPath: "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3") /*In terminal type "which python3*/
+        process.arguments = ["/Users/dowrion/Desktop/CSE/CSE155/Project/productivity.py"] /*Change to path of productivity.py on your computer*/
+        
+        DispatchQueue.global().async {
+            do {
+                try process.run()
+                process.waitUntilExit()
+                print("Python script executed successfully.")
+            } catch {
+                print("Failed to run Python script: \(error)")
+            }
         }
     }
+    
+    @objc func stopProductivityScript() {
+        runningProcess?.terminate()
+        runningProcess = nil
+        print("Python script terminated.")
+    }
 
-    @objc func quitApp() {
+    @objc func quitApplication() {
+        print("Quitting application...")
+        runningProcess?.terminate()
         NSApplication.shared.terminate(self)
     }
 }
