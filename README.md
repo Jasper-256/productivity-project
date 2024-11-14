@@ -10,6 +10,9 @@ pip install pyautogui
 pip install openai
 pip install pytesseract
 pip install Pillow
+pip install plyer (windows)
 ```
-3. For macOS, use homebrew to install tesseract `brew install tesseract` (install homebrew if you do not have it). For windows, look up tesseract ocr and install it.
+3. For macOS, use homebrew to install tesseract `brew install tesseract` (install homebrew if you do not have it). For windows, install Tesseract OCR from the [Tesseract GitHub page](https://github.com/UB-Mannheim/tesseract/wiki) and add `C:\Program Files\Tesseract-OCR\` to your system PATH.
+
 4. Run the python file by typing `python productivity.py` into your terminal. You might need to use `python3 productivity.py` depending on your python installation.
+
