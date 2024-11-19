@@ -1,3 +1,6 @@
 .DS_Store
 log
 openai_api_key.txt
+StatusMenuApp
+venv
+tesseract

@@ -31,8 +31,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func runProductivityScript() {
         let process = Process()
         self.runningProcess = process
-        process.executableURL = URL(fileURLWithPath: "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3") /*In terminal type "which python3*/
-        process.arguments = ["/Users/dowrion/Desktop/CSE/CSE155/Project/productivity.py"] /*Change to path of productivity.py on your computer*/
+        process.executableURL = URL(fileURLWithPath: "venv/bin/python3")
+        process.arguments = ["productivity.py"]
         
         DispatchQueue.global().async {
             do {
