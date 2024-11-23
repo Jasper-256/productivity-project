@@ -6,14 +6,20 @@ import os
 from datetime import datetime
 import re
 import subprocess
-
+from collections import Counter
 
 def load_api_key():
     with open('openai_api_key.txt', 'r') as file:
         return file.read()
 
 OPENAI_API_KEY = load_api_key()
-TIME_ALLOWED = 15
+TIME_ALLOWED = 10
+TITLE = "Productivity Monitor"
+
+time_productive_today = 0.0
+time_unproductive_today = 0.0
+time_program_active_today = 0.0
+productivity_history = []
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -69,11 +75,18 @@ def notify_user(is_prod):
     elif is_prod == 0:
         text = "GET BACK ON TASK!"
     
-    title = "Productivity Monitor"
-
     script = f"""
     display dialog "{text}" ¬
-    with title "{title}" ¬
+    with title "{TITLE}" ¬
+    with icon caution ¬""" + """
+    buttons {"OK", "Ignore"}
+    """
+    subprocess.Popen(["osascript", "-e", script], shell=False)
+
+def very_unproductive_notification():
+    script = f"""
+    display dialog "THIS IS YOUR FINAL WARNING, GET BACK ON TASK!!!!!!!!" ¬
+    with title "{TITLE}" ¬
     with icon caution ¬""" + """
     buttons {"OK"}
     """
@@ -94,11 +107,10 @@ def ask_chatgpt(prompt):
 def remove_phrases(text):
     phrases_to_remove = [
         "Productivity Monitor",
-        "ChatGPT failed to determine whether you are productive or not",
         "Good job being productive",
         "GET BACK ON TASK!",
-        "productive",
-        "unproductive"
+        "Run Program",
+        "Stop Program"
     ]
     for phrase in phrases_to_remove:
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
@@ -113,7 +125,7 @@ def productivity_check():
     extracted_text = remove_phrases(extracted_text)
     
     middle = time.time()
-    replace_keyword = "<start text>"
+    replace_keyword = '" + extracted_text + "'
     
     with open('gpt_judge_prompt_01.txt') as file:
         prompt_template = file.read()
@@ -139,8 +151,6 @@ def productivity_check():
     
     return is_prod
 
-    
-
 def suggest_tabs_to_close(extracted_text):
     # Simulate tab suggestions based on keywords
     tabs = [
@@ -157,25 +167,46 @@ def suggest_tabs_to_close(extracted_text):
     
     return suggested_tabs
 
-def update_status_file(is_prod):
-    status = "productive" if is_prod == 1 else "unproductive"
-    with open("productivity_status.txt", "w") as file:
-        file.write(status)
-
 
 def main():
-    time.sleep(1)
+    global time_program_active_today, time_productive_today, time_unproductive_today, productivity_history
+    time.sleep(0.1)
     
     for _ in range(100):
         start_time = time.time()
         
         is_prod = productivity_check()
+
+        productivity_history.append(is_prod)
+        last_min_history_unproductive_cnt = -1
+        if len(productivity_history) >= 6:
+            last_min_history = productivity_history[-6:]
+            last_min_history_counter = Counter(last_min_history)
+            last_min_history_unproductive_cnt = last_min_history_counter[0]
+        
         print(print_prod(is_prod))
+        print(f"last min\t{last_min_history_unproductive_cnt} / 6")
+
         notify_user(is_prod)
+        if last_min_history_unproductive_cnt > 3 and is_prod == 0:
+            very_unproductive_notification()
         
         elapsed_time = time.time() - start_time
         if elapsed_time < TIME_ALLOWED:
             time.sleep(TIME_ALLOWED - elapsed_time)
+        
+        total_time = time.time() - start_time
+        time_program_active_today += total_time
+        if is_prod == 1:
+            time_productive_today += total_time
+        elif is_prod == 0:
+            time_unproductive_today += total_time
+
+        print(f"total\t\t{time_program_active_today}")
+        print(f"prod\t\t{time_productive_today}")
+        print(f"un\t\t{time_unproductive_today}")
+        print(f"history\t\t{productivity_history}")
+        print()
 
 if __name__ == "__main__":
     main()
