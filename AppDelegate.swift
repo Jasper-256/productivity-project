@@ -25,8 +25,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Stop Program", action: #selector(stopProductivityScript), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApplication), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Show Tab Suggestions", action: #selector(showTabSuggestions), keyEquivalent: ""))
         statusItem?.menu = menu
     }
+
+    @objc func showTabSuggestions() {
+    let filePath = "suggested_tabs.txt" // Ensure this matches the Python output path
+    var suggestions = "No suggestions available."
+    
+    if let content = try? String(contentsOfFile: filePath, encoding: .utf8) {
+        suggestions = content
+    }
+    
+    let alert = NSAlert()
+    alert.messageText = "Suggested Tabs to Close"
+    alert.informativeText = suggestions
+    alert.alertStyle = .informational
+    alert.addButton(withTitle: "OK")
+    alert.runModal()
+}
+
 
     @objc func runProductivityScript() {
         let process = Process()

@@ -118,7 +118,7 @@ def productivity_check():
     with open('gpt_judge_prompt_01.txt') as file:
         prompt_template = file.read()
     prompt = prompt_template.replace(replace_keyword, extracted_text, 1)
-    #question = "This is a screenshot of a user's computer with the following text <start text>" + extracted_text + "<end text> Is the user being productive? Think through this step by step and identify key words that might mean the user is being productive or not. Consider that unintelligible text could be due to errors in recognising text on the users screen so try to ignore it. Your response is being used in an automated script. In order to make the script run properly, the last thing you say must be either 'In conclusion, the user is being productive.' or 'In conclusion the user is being unproductive.'"
+    
     answer = ask_chatgpt(prompt)
     last_word = answer.split()[-1].lower()
     is_prod = -1
@@ -128,11 +128,32 @@ def productivity_check():
     elif "unproductive" in last_word:
         is_prod = 0
     
+    # Suggest tabs to close based on extracted text
+    suggest_tabs_to_close(extracted_text)
+    
     end = time.time()
     log_run(start, middle, end, extracted_text, answer, is_prod)
     
     return is_prod
+
     
+
+def suggest_tabs_to_close(extracted_text):
+    # Simulate tab suggestions based on keywords
+    tabs = [
+        "Facebook", "Twitter", "Reddit", "YouTube", "Netflix", "Shopping sites"
+    ]
+    suggested_tabs = [tab for tab in tabs if tab.lower() in extracted_text.lower()]
+    
+    if not suggested_tabs:
+        suggested_tabs = ["No distracting tabs found."]
+    
+    # Write suggestions to a file for the Swift app to read
+    with open("suggested_tabs.txt", "w") as file:
+        file.write("\n".join(suggested_tabs))
+    
+    return suggested_tabs
+
 
 def main():
     time.sleep(1)
