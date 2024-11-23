@@ -130,6 +130,9 @@ def productivity_check():
     
     # Suggest tabs to close based on extracted text
     suggest_tabs_to_close(extracted_text)
+
+    # Outline Green for productive and Red for unproductive
+    update_status_file(is_prod)
     
     end = time.time()
     log_run(start, middle, end, extracted_text, answer, is_prod)
@@ -153,6 +156,11 @@ def suggest_tabs_to_close(extracted_text):
         file.write("\n".join(suggested_tabs))
     
     return suggested_tabs
+
+def update_status_file(is_prod):
+    status = "productive" if is_prod == 1 else "unproductive"
+    with open("productivity_status.txt", "w") as file:
+        file.write(status)
 
 
 def main():
