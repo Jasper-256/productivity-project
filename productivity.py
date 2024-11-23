@@ -1,6 +1,7 @@
 import pyautogui
 from openai import OpenAI
 import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 import time
 import os
 from datetime import datetime
@@ -60,31 +61,28 @@ def print_prod(is_prod):
     else:
         return "unknown"
 
+from plyer import notification
+
 def notify_user(is_prod):
-    if is_prod != 0: return
-    
-    text = "ChatGPT failed to determine whether you are productive or not"
     if is_prod == 1:
         text = "Good job being productive"
     elif is_prod == 0:
         text = "GET BACK ON TASK!"
-    
-    title = "Productivity Monitor"
+    else:
+        text = "ChatGPT failed to determine productivity"
 
-    script = f"""
-    display dialog "{text}" ¬
-    with title "{title}" ¬
-    with icon caution ¬""" + """
-    buttons {"OK"}
-    """
-    subprocess.Popen(["osascript", "-e", script], shell=False)
+    notification.notify(
+        title="Productivity Monitor",
+        message=text,
+        timeout=5  # Time in seconds for the notification to display
+    )
 
-def ask_chatgpt(prompt):
+def ask_chatgpt(question):
     response = client.chat.completions.create(
         messages=[
             {
                 "role": "user",
-                "content": prompt,
+                "content": question,
             }
         ],
         model="gpt-4o-mini",
@@ -96,9 +94,7 @@ def remove_phrases(text):
         "Productivity Monitor",
         "ChatGPT failed to determine whether you are productive or not",
         "Good job being productive",
-        "GET BACK ON TASK!",
-        "productive",
-        "unproductive"
+        "GET BACK ON TASK!"
     ]
     for phrase in phrases_to_remove:
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
@@ -113,6 +109,7 @@ def productivity_check():
     extracted_text = remove_phrases(extracted_text)
     
     middle = time.time()
+
     replace_keyword = '" + extracted_text + "'
     
     with open('gpt_judge_prompt_01.txt') as file:
@@ -120,6 +117,7 @@ def productivity_check():
     prompt = prompt_template.replace(replace_keyword, extracted_text, 1)
     
     answer = ask_chatgpt(prompt)
+
     last_word = answer.split()[-1].lower()
     is_prod = -1
     
