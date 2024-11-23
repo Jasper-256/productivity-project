@@ -113,7 +113,7 @@ def productivity_check():
     extracted_text = remove_phrases(extracted_text)
     
     middle = time.time()
-    replace_keyword = "<start text>"
+    replace_keyword = '" + extracted_text + "'
     
     with open('gpt_judge_prompt_01.txt') as file:
         prompt_template = file.read()
