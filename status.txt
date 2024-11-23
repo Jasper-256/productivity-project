@@ -1,0 +1,4 @@
+Current status: unproductive
+Time productive today: 10.00 seconds
+Time unproductive today: 20.01 seconds
+Time program active today: 30.01 seconds

@@ -8,6 +8,7 @@ import re
 import subprocess
 from collections import Counter
 
+
 def load_api_key():
     with open('openai_api_key.txt', 'r') as file:
         return file.read()
@@ -75,11 +76,13 @@ def notify_user(is_prod):
     elif is_prod == 0:
         text = "GET BACK ON TASK!"
     
+    title = "Productivity Monitor"
+
     script = f"""
     display dialog "{text}" ¬
-    with title "{TITLE}" ¬
+    with title "{title}" ¬
     with icon caution ¬""" + """
-    buttons {"OK", "Ignore"}
+    buttons {"OK"}
     """
     subprocess.Popen(["osascript", "-e", script], shell=False)
 
@@ -107,10 +110,11 @@ def ask_chatgpt(prompt):
 def remove_phrases(text):
     phrases_to_remove = [
         "Productivity Monitor",
+        "ChatGPT failed to determine whether you are productive or not",
         "Good job being productive",
         "GET BACK ON TASK!",
-        "Run Program",
-        "Stop Program"
+        "productive",
+        "unproductive"
     ]
     for phrase in phrases_to_remove:
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
@@ -151,6 +155,8 @@ def productivity_check():
     
     return is_prod
 
+    
+
 def suggest_tabs_to_close(extracted_text):
     # Simulate tab suggestions based on keywords
     tabs = [
@@ -166,6 +172,11 @@ def suggest_tabs_to_close(extracted_text):
         file.write("\n".join(suggested_tabs))
     
     return suggested_tabs
+
+def update_status_file(is_prod):
+    status = "productive" if is_prod == 1 else "unproductive"
+    with open("productivity_status.txt", "w") as file:
+        file.write(status)
 
 
 def main():
