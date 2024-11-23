@@ -51,6 +51,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.menu = menu
     }
 
+    @objc func showTabSuggestions() {
+        let filePath = "suggested_tabs.txt" // Ensure this matches the Python output path
+        var suggestions = "No suggestions available."
+        
+        if let content = try? String(contentsOfFile: filePath, encoding: .utf8) {
+            suggestions = content
+        }
+        
+        let alert = NSAlert()
+        alert.messageText = "Suggested Tabs to Close"
+        alert.informativeText = suggestions
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
     @objc func runProductivityScript() {
         print("Run Program clicked")
         let process = Process()
@@ -89,14 +105,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Schedule the timer to check productivity status every second
         DispatchQueue.main.async {
-            self.statusCheckTimer = Timer.scheduledTimer(timeInterval: 1.0,
-                                                         target: self,
-                                                         selector: #selector(self.checkProductivityStatus),
-                                                         userInfo: nil,
-                                                         repeats: true)
+            self.statusCheckTimer = Timer.scheduledTimer(timeInterval: 1.0, 
+                                                     target: self, 
+                                                     selector: #selector(self.checkProductivityStatus), 
+                                                     userInfo: nil, 
+                                                     repeats: true)
         }
     }
-
+    
     @objc func stopProductivityScript() {
         print("Stop Program clicked")
         runningProcess?.terminate()
@@ -151,30 +167,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(self)
     }
 
-    @objc func showTabSuggestions() {
-        let filePath = "\(self.currentDir)/suggested_tabs.txt" // Ensure this matches the Python output path
-        var suggestions = "No suggestions available."
-
-        if let content = try? String(contentsOfFile: filePath, encoding: .utf8) {
-            suggestions = content
-        }
-
-        let alert = NSAlert()
-        alert.messageText = "Suggested Tabs to Close"
-        alert.informativeText = suggestions
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
-    }
-
+    // Check the productivity status from the status file
     @objc func checkProductivityStatus() {
-        let filePath = "\(self.currentDir)/productivity_status.txt"
-
+        let filePath = "productivity_status.txt"
+        
         guard let status = try? String(contentsOfFile: filePath, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else {
             print("Failed to read status file.")
             return
         }
-
+        
         DispatchQueue.main.async {
             if status == "productive" {
                 self.applyGreenOutline()
@@ -186,33 +187,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func createOverlayWindow(borderColor: CGColor) {
-        if productiveWindow == nil {
-            // Get screen size
-            guard let screen = NSScreen.main else { return }
-            let screenFrame = screen.frame
+    func createProductiveWindow() {
+    DispatchQueue.main.async {
+        if self.productiveWindow == nil {
+            self.productiveWindow = NSWindow(contentRect: NSMakeRect(0, 0, 1440, 900),
+                                             styleMask: [.titled, .resizable],
+                                             backing: .buffered,
+                                             defer: false)
+            self.productiveWindow?.contentView?.wantsLayer = true
+            self.productiveWindow?.makeKeyAndOrderFront(nil)
 
-            // Create a transparent overlay window
-            productiveWindow = NSWindow(contentRect: screenFrame,
-                                        styleMask: [.borderless],
-                                        backing: .buffered,
-                                        defer: false)
-            productiveWindow?.isOpaque = false
-            productiveWindow?.backgroundColor = .clear
-            productiveWindow?.ignoresMouseEvents = true
-            productiveWindow?.level = .screenSaver
-            productiveWindow?.contentView?.wantsLayer = true
-
-            // Add the border
-            productiveWindow?.contentView?.layer?.borderWidth = 10.0
-            productiveWindow?.contentView?.layer?.borderColor = borderColor
-
-            productiveWindow?.makeKeyAndOrderFront(nil)
-        } else {
-            // Update the border color if the window already exists
-            productiveWindow?.contentView?.layer?.borderColor = borderColor
+            self.productiveWindow?.contentView?.layer?.backgroundColor = NSColor.white.cgColor
+            }
         }
     }
+
+    func createOverlayWindow(borderColor: CGColor) {
+    if productiveWindow == nil {
+        // Get screen size
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.frame
+
+        // Create a transparent overlay window
+        productiveWindow = NSWindow(contentRect: screenFrame,
+                                     styleMask: [.borderless],
+                                     backing: .buffered,
+                                     defer: false)
+        productiveWindow?.isOpaque = false
+        productiveWindow?.backgroundColor = .clear
+        productiveWindow?.ignoresMouseEvents = true
+        productiveWindow?.level = .screenSaver
+        productiveWindow?.contentView?.wantsLayer = true
+
+        // Add the border
+        productiveWindow?.contentView?.layer?.borderWidth = 10.0
+        productiveWindow?.contentView?.layer?.borderColor = borderColor
+
+        productiveWindow?.makeKeyAndOrderFront(nil)
+    } else {
+        // Update the border color if the window already exists
+        productiveWindow?.contentView?.layer?.borderColor = borderColor
+    }
+}
 
     func applyGreenOutline() {
         DispatchQueue.main.async {
@@ -232,6 +248,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.productiveWindow = nil
         }
     }
+
 }
 
 // Explicit entry point
