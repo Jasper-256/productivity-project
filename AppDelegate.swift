@@ -220,7 +220,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         productiveWindow?.contentView?.wantsLayer = true
 
         // Add the border
-        productiveWindow?.contentView?.layer?.borderWidth = 10.0
+        productiveWindow?.contentView?.layer?.borderWidth = 3.0
         productiveWindow?.contentView?.layer?.borderColor = borderColor
 
         productiveWindow?.makeKeyAndOrderFront(nil)
